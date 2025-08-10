@@ -134,6 +134,7 @@
                     attribute float a_index;
                     varying float v_index;
                     varying float vDistanceFromCamera;
+                    varying float radius;
 
                     float rand(vec2 co){
                         return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) - 0.5; // Center noise around 0
@@ -157,6 +158,7 @@
 
                         // Range from 0 to 1 for the spiral
                         float radiusInSpiral = index / pointsPerSpiral;
+                        radius = radiusInSpiral;
                         float angleInSpiral = index / pointsPerSpiral * 3.14159 * 2.0 * totalTurns + angleOffset;
 
                         // Convert polar to Cartesian coordinates
@@ -188,6 +190,7 @@
                     uniform vec3 u_color;
                     varying float v_index;
                     varying float vDistanceFromCamera;
+                    varying float radius;
 
                     float rand(vec2 co){
                         return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
@@ -202,7 +205,9 @@
                         vec2 p = gl_PointCoord * 2.0 - 1.0;
                         float d = dot(p, p);
                         if (d > 1.0) { discard; }
-                        float fade = 1.0 - smoothstep(0.5, 3.0, vDistanceFromCamera);
+                        float cameraFade = 1.0 - smoothstep(0.5, 3.0, vDistanceFromCamera);
+                        float galaxyFade = smoothstep(1.0, 0.0, radius);
+                        float fade = cameraFade * galaxyFade;
                         gl_FragColor = vec4(colorNoise(v_index), fade);
                     }
                 `,
