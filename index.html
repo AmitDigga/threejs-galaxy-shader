@@ -66,7 +66,7 @@
             const canvas = document.getElementById('canvas');
 
             // Tweak this to increase/decrease points. Keep reasonable for laptops.
-            const NUM_POINTS = 20000;
+            const NUM_POINTS = 5000;
 
 
             // Three.js setup
@@ -136,7 +136,7 @@
                     varying float v_index;
 
                     float rand(vec2 co){
-                        return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+                        return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) - 0.5; // Center noise around 0
                     }
 
                     vec3 getNoise(float index) {
@@ -181,7 +181,7 @@
                         float distanceFromCamera = -viewPosition.z;
 
                         // Scale point size with screen height for consistent density
-                        gl_PointSize = u_pointSize * (u_resolution.y / 900.0) * (1.0 / distanceFromCamera);
+                        gl_PointSize = u_pointSize * (u_resolution.y / 600.0) * (1.0 / distanceFromCamera);
                     }
                 `,
                 fragmentShader: `
