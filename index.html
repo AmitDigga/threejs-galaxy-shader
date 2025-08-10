@@ -122,7 +122,8 @@
                     u_pointSize: { value: 2.0 },
                     u_gridCols: { value: gridCols },
                     u_gridRows: { value: gridRows },
-                    u_totalPoints: { value: NUM_POINTS }
+                    u_totalPoints: { value: NUM_POINTS },
+                    u_time: { value: 0 } // Add time uniform for potential animations
                 },
                 vertexShader: `
                     uniform vec2 u_resolution;
@@ -130,6 +131,7 @@
                     uniform float u_gridCols;
                     uniform float u_gridRows;
                     uniform float u_totalPoints;
+                    uniform float u_time;
                     attribute float a_index;
 
                     float rand(vec2 co){
@@ -147,6 +149,11 @@
                         float spiralIndex = floor(originalIndex / pointsPerSpiral);
                         float angleOffset = float(spiralIndex) / totalSpirals * 3.14159 * 2.0;
                         float index = mod(originalIndex, pointsPerSpiral);
+
+                        // Add time
+                        float timeOffset = mod(u_time , 1.0);
+                        index = mod(index - timeOffset * pointsPerSpiral  ,pointsPerSpiral);
+
                         // Range from 0 to 1 for the spiral
                         float radiusInSpiral = index / pointsPerSpiral;
                         float angleInSpiral = index / pointsPerSpiral * 3.14159 * 2.0 * totalTurns + angleOffset;
@@ -154,7 +161,7 @@
                         // Convert polar to Cartesian coordinates
                         float x = cos(angleInSpiral) * radiusInSpiral;
                         float y = sin(angleInSpiral) * radiusInSpiral;
-                        vec3 noise = getNoise(index) * .1 * radiusInSpiral;
+                        vec3 noise = getNoise(originalIndex) * .1 * radiusInSpiral;
                         return vec3(x + noise.x, y + noise.y, noise.z);
                     }
 
@@ -210,6 +217,8 @@
             // Animation loop
             function animate() {
                 requestAnimationFrame(animate);
+                const time = performance.now() / 100000; // Get time in seconds
+                shaderMaterial.uniforms.u_time.value = time; // Update time uniform
 
                 // Update controls for smooth damping
                 controls.update();
