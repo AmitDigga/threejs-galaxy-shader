@@ -123,7 +123,7 @@
                     u_gridCols: { value: gridCols },
                     u_gridRows: { value: gridRows },
                     u_totalPoints: { value: NUM_POINTS },
-                    u_time: { value: 0 } // Add time uniform for potential animations
+                    u_time: { value: 0 }, // Add time uniform for potential animations
                 },
                 vertexShader: `
                     uniform vec2 u_resolution;
@@ -176,10 +176,12 @@
                         
                         // Map grid to [-1, 1] range
                         vec3 pos = getSpiralCoordinate(a_index);
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-                        
+                        vec4 viewPosition = modelViewMatrix * vec4(pos, 1.0);
+                        gl_Position = projectionMatrix * viewPosition;
+                        float distanceFromCamera = -viewPosition.z;
+
                         // Scale point size with screen height for consistent density
-                        gl_PointSize = u_pointSize * (u_resolution.y / 900.0);
+                        gl_PointSize = u_pointSize * (u_resolution.y / 900.0) * (1.0 / distanceFromCamera);
                     }
                 `,
                 fragmentShader: `
