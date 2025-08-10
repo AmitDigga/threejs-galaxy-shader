@@ -46,10 +46,20 @@
         <canvas width="600" height="600" id="canvas"></canvas>
     </div>
 
-    <!-- Load Three.js from CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="importmap">
+    			{
+    				"imports": {
+    					"three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+    					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/"
+    				}
+    			}
+    		</script>
 
-    <script>
+
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         const CANVAS_WIDTH = 600;
         const CANVAS_HEIGHT = 600;
         function a() {
@@ -75,6 +85,14 @@
 
             // Position camera
             camera.position.z = 2;
+
+            // Add OrbitControls
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true; // Smooth camera movements
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 0.5;
+            controls.maxDistance = 10;
 
             // Compute grid dimensions for points
             const gridCols = Math.ceil(Math.sqrt(NUM_POINTS));
@@ -184,6 +202,9 @@
             // Animation loop
             function animate() {
                 requestAnimationFrame(animate);
+
+                // Update controls for smooth damping
+                controls.update();
 
                 // Render the scene
                 renderer.render(scene, camera);
