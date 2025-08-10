@@ -133,14 +133,34 @@
                     u_color: { value: new THREE.Color(0.92, 0.94, 1.0) },
                     u_pointSize: { value: 2.0 },
                     u_gridCols: { value: gridCols },
-                    u_gridRows: { value: gridRows }
+                    u_gridRows: { value: gridRows },
+                    u_totalPoints: { value: NUM_POINTS }
                 },
                 vertexShader: `
                     uniform vec2 u_resolution;
                     uniform float u_pointSize;
                     uniform float u_gridCols;
                     uniform float u_gridRows;
+                    uniform float u_totalPoints;
                     attribute float a_index;
+
+                    vec2 getSpiralCoordinate(float originalIndex) {
+                        float totalSpirals = 1.0;
+                        float totalTurns = 1.0;
+                        float pointsPerSpiral = floor(u_totalPoints / totalSpirals);
+                        float spiralIndex = floor(originalIndex / pointsPerSpiral);
+                        float angleOffset = float(spiralIndex) / totalSpirals * 3.14159 * 2.0;
+                        float index = mod(originalIndex, pointsPerSpiral);
+                        // Range from 0 to 1 for the spiral
+                        float radiusInSpiral = index / pointsPerSpiral;
+                        float angleInSpiral = radiusInSpiral * 3.14159 * 2.0 * totalTurns + angleOffset;
+
+                        // Convert polar to Cartesian coordinates
+                        float x = cos(angleInSpiral) * radiusInSpiral;
+                        float y = sin(angleInSpiral) * radiusInSpiral;
+                        return vec2(x, y);
+
+                    }
 
                     void main() {
                         // Calculate grid position from index
@@ -148,11 +168,10 @@
                         float row = floor(a_index / u_gridCols);
                         
                         // Map grid to [-1, 1] range
-                        float x = u_gridCols > 1.0 ? (col / (u_gridCols - 1.0)) * 2.0 - 1.0 : 0.0;
-                        float y = u_gridRows > 1.0 ? (row / (u_gridRows - 1.0)) * 2.0 - 1.0 : 0.0;
+                        vec2 spiralCoord = getSpiralCoordinate(a_index);
                         
                         // Create position vector
-                        vec3 pos = vec3(x, y, 0.0);
+                        vec3 pos = vec3(spiralCoord.x, spiralCoord.y, 0.0);
                         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                         
                         // Scale point size with screen height for consistent density
