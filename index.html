@@ -83,8 +83,6 @@
             renderer.setPixelRatio(Math.max(1, Math.min(2, window.devicePixelRatio || 1)));
             renderer.setClearColor(0x0b0b0f, 1.0);
 
-            // Position camera
-            camera.position.z = 2;
 
             // Add OrbitControls
             const controls = new OrbitControls(camera, renderer.domElement);
@@ -93,6 +91,7 @@
             controls.screenSpacePanning = false;
             controls.minDistance = 0.5;
             controls.maxDistance = 10;
+            camera.position.set(0, -1, .4);
 
             // Compute grid dimensions for points
             const gridCols = Math.ceil(Math.sqrt(NUM_POINTS));
@@ -134,6 +133,7 @@
                     uniform float u_time;
                     attribute float a_index;
                     varying float v_index;
+                    varying float vDistanceFromCamera;
 
                     float rand(vec2 co){
                         return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) - 0.5; // Center noise around 0
@@ -178,15 +178,16 @@
                         vec3 pos = getSpiralCoordinate(a_index);
                         vec4 viewPosition = modelViewMatrix * vec4(pos, 1.0);
                         gl_Position = projectionMatrix * viewPosition;
-                        float distanceFromCamera = -viewPosition.z;
+                        vDistanceFromCamera = -viewPosition.z;
 
                         // Scale point size with screen height for consistent density
-                        gl_PointSize = u_pointSize * (u_resolution.y / 600.0) * (1.0 / distanceFromCamera);
+                        gl_PointSize = u_pointSize * (u_resolution.y / 600.0) * (1.0 / vDistanceFromCamera);
                     }
                 `,
                 fragmentShader: `
                     uniform vec3 u_color;
                     varying float v_index;
+                    varying float vDistanceFromCamera;
 
                     float rand(vec2 co){
                         return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
@@ -201,8 +202,8 @@
                         vec2 p = gl_PointCoord * 2.0 - 1.0;
                         float d = dot(p, p);
                         if (d > 1.0) { discard; }
-                        float alpha = smoothstep(1.0, 0.7, 1.0 - d);
-                        gl_FragColor = vec4(colorNoise(v_index), alpha);
+                        float fade = 1.0 - smoothstep(0.5, 3.0, vDistanceFromCamera);
+                        gl_FragColor = vec4(colorNoise(v_index), fade);
                     }
                 `,
                 transparent: true,
