@@ -133,6 +133,7 @@
                     uniform float u_totalPoints;
                     uniform float u_time;
                     attribute float a_index;
+                    varying float v_index;
 
                     float rand(vec2 co){
                         return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
@@ -162,6 +163,7 @@
                         float x = cos(angleInSpiral) * radiusInSpiral;
                         float y = sin(angleInSpiral) * radiusInSpiral;
                         vec3 noise = getNoise(originalIndex) * .1 * radiusInSpiral;
+                        v_index = originalIndex;
                         return vec3(x + noise.x, y + noise.y, noise.z);
                     }
 
@@ -182,6 +184,15 @@
                 `,
                 fragmentShader: `
                     uniform vec3 u_color;
+                    varying float v_index;
+
+                    float rand(vec2 co){
+                        return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+                    }
+
+                    vec3 colorNoise(float index) {
+                        return vec3(rand(vec2(index)), rand(vec2(index + 1.0)), rand(vec2(index + 2.0)));
+                    }
 
                     void main() {
                         // Round points with soft edge
@@ -189,7 +200,7 @@
                         float d = dot(p, p);
                         if (d > 1.0) { discard; }
                         float alpha = smoothstep(1.0, 0.7, 1.0 - d);
-                        gl_FragColor = vec4(u_color, alpha);
+                        gl_FragColor = vec4(colorNoise(v_index), alpha);
                     }
                 `,
                 transparent: true,
