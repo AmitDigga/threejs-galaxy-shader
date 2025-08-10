@@ -115,7 +115,7 @@
                     attribute float a_index;
 
                     vec2 getSpiralCoordinate(float originalIndex) {
-                        float totalSpirals = 1.0;
+                        float totalSpirals = 3.0;
                         float totalTurns = 1.0;
                         float pointsPerSpiral = floor(u_totalPoints / totalSpirals);
                         float spiralIndex = floor(originalIndex / pointsPerSpiral);
@@ -123,13 +123,12 @@
                         float index = mod(originalIndex, pointsPerSpiral);
                         // Range from 0 to 1 for the spiral
                         float radiusInSpiral = index / pointsPerSpiral;
-                        float angleInSpiral = radiusInSpiral * 3.14159 * 2.0 * totalTurns + angleOffset;
+                        float angleInSpiral = index / pointsPerSpiral * 3.14159 * 2.0 * totalTurns + angleOffset;
 
                         // Convert polar to Cartesian coordinates
                         float x = cos(angleInSpiral) * radiusInSpiral;
                         float y = sin(angleInSpiral) * radiusInSpiral;
                         return vec2(x, y);
-
                     }
 
                     void main() {
