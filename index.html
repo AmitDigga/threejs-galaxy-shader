@@ -66,7 +66,7 @@
             const canvas = document.getElementById('canvas');
 
             // Tweak this to increase/decrease points. Keep reasonable for laptops.
-            const NUM_POINTS = 2000;
+            const NUM_POINTS = 20000;
 
 
             // Three.js setup
@@ -132,9 +132,13 @@
                     uniform float u_totalPoints;
                     attribute float a_index;
 
+                    float rand(vec2 co){
+                        return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+                    }
+
                     vec2 getSpiralCoordinate(float originalIndex) {
-                        float totalSpirals = 3.0;
-                        float totalTurns = 1.0;
+                        float totalSpirals = 5.0;
+                        float totalTurns = 3.0;
                         float pointsPerSpiral = floor(u_totalPoints / totalSpirals);
                         float spiralIndex = floor(originalIndex / pointsPerSpiral);
                         float angleOffset = float(spiralIndex) / totalSpirals * 3.14159 * 2.0;
@@ -149,6 +153,11 @@
                         return vec2(x, y);
                     }
 
+                    vec3 getNoise(float index, float scale) {
+                        // Add random offset to coordinates
+                        return vec3(rand( vec2(index)), rand( vec2(index + 1.0)), rand( vec2(index + 2.0))) * scale;
+                    }
+
                     void main() {
                         // Calculate grid position from index
                         float col = mod(a_index, u_gridCols);
@@ -156,9 +165,11 @@
                         
                         // Map grid to [-1, 1] range
                         vec2 spiralCoord = getSpiralCoordinate(a_index);
-                        
+                        vec3 noise = getNoise(a_index, 0.05); // Add noise to coordinates
+                        spiralCoord += noise.xy; // Add noise to coordinates
+
                         // Create position vector
-                        vec3 pos = vec3(spiralCoord.x, spiralCoord.y, 0.0);
+                        vec3 pos = vec3(spiralCoord.x, spiralCoord.y, noise.z);
                         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                         
                         // Scale point size with screen height for consistent density
