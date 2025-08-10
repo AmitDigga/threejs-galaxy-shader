@@ -110,27 +110,20 @@
             const gridCols = Math.ceil(Math.sqrt(NUM_POINTS));
             const gridRows = Math.ceil(NUM_POINTS / gridCols);
 
-            // Create geometry with positions for grid layout
+            // Create geometry with only point indices
             const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(NUM_POINTS * 3);
-            const indices = new Float32Array(NUM_POINTS); // Custom attribute for vertex index
+            const indices = new Float32Array(NUM_POINTS); // Only need the index
+            const dummyPositions = new Float32Array(NUM_POINTS * 3); // Dummy positions (will be overridden in shader)
 
             for (let i = 0; i < NUM_POINTS; i++) {
-                const col = i % gridCols;
-                const row = Math.floor(i / gridCols);
-
-                // Map grid to [-1, 1] range
-                const x = gridCols > 1 ? (col / (gridCols - 1)) * 2 - 1 : 0;
-                const y = gridRows > 1 ? (row / (gridRows - 1)) * 2 - 1 : 0;
-
-                positions[i * 3] = x;
-                positions[i * 3 + 1] = y;
-                positions[i * 3 + 2] = 0;
-
                 indices[i] = i;
+                // Set dummy positions (these will be ignored in the vertex shader)
+                dummyPositions[i * 3] = 0;
+                dummyPositions[i * 3 + 1] = 0;
+                dummyPositions[i * 3 + 2] = 0;
             }
 
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('position', new THREE.BufferAttribute(dummyPositions, 3));
             geometry.setAttribute('a_index', new THREE.BufferAttribute(indices, 1));
 
             // Custom ShaderMaterial for points
@@ -138,16 +131,29 @@
                 uniforms: {
                     u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
                     u_color: { value: new THREE.Color(0.92, 0.94, 1.0) },
-                    u_pointSize: { value: 2.0 }
+                    u_pointSize: { value: 2.0 },
+                    u_gridCols: { value: gridCols },
+                    u_gridRows: { value: gridRows }
                 },
                 vertexShader: `
                     uniform vec2 u_resolution;
                     uniform float u_pointSize;
+                    uniform float u_gridCols;
+                    uniform float u_gridRows;
                     attribute float a_index;
 
                     void main() {
-                        // Use the position from the buffer geometry
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        // Calculate grid position from index
+                        float col = mod(a_index, u_gridCols);
+                        float row = floor(a_index / u_gridCols);
+                        
+                        // Map grid to [-1, 1] range
+                        float x = u_gridCols > 1.0 ? (col / (u_gridCols - 1.0)) * 2.0 - 1.0 : 0.0;
+                        float y = u_gridRows > 1.0 ? (row / (u_gridRows - 1.0)) * 2.0 - 1.0 : 0.0;
+                        
+                        // Create position vector
+                        vec3 pos = vec3(x, y, 0.0);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                         
                         // Scale point size with screen height for consistent density
                         gl_PointSize = u_pointSize * (u_resolution.y / 900.0);
