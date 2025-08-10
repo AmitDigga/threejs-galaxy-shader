@@ -66,7 +66,7 @@
             const canvas = document.getElementById('canvas');
 
             // Tweak this to increase/decrease points. Keep reasonable for laptops.
-            const NUM_POINTS = 5000;
+            const NUM_POINTS = 10000;
 
 
             // Three.js setup
@@ -146,7 +146,7 @@
 
                     vec3 getSpiralCoordinate(float originalIndex) {
                         float totalSpirals = 5.0;
-                        float totalTurns = 3.0;
+                        float totalTurns = 2.0;
                         float pointsPerSpiral = floor(u_totalPoints / totalSpirals);
                         float spiralIndex = floor(originalIndex / pointsPerSpiral);
                         float angleOffset = float(spiralIndex) / totalSpirals * 3.14159 * 2.0;
@@ -164,7 +164,7 @@
                         // Convert polar to Cartesian coordinates
                         float x = cos(angleInSpiral) * radiusInSpiral;
                         float y = sin(angleInSpiral) * radiusInSpiral;
-                        vec3 noise = getNoise(originalIndex) * .1 * radiusInSpiral;
+                        vec3 noise = getNoise(originalIndex) * .2 * radiusInSpiral;
                         v_index = originalIndex;
                         return vec3(x + noise.x, y + noise.y, noise.z);
                     }
