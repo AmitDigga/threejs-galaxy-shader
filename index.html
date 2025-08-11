@@ -23,8 +23,8 @@
         }
 
         #canvas {
-            width: 600px;
-            height: 600px;
+            width: 1200px;
+            height: 1200px;
             display: block;
             border-radius: 4px;
         }
@@ -43,7 +43,7 @@
 
 <body>
     <div id="app">
-        <canvas width="600" height="600" id="canvas"></canvas>
+        <canvas width="1200" height="1200" id="canvas"></canvas>
     </div>
 
     <script type="importmap">
@@ -60,13 +60,13 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        const CANVAS_WIDTH = 600;
-        const CANVAS_HEIGHT = 600;
+        const CANVAS_WIDTH = 1200;
+        const CANVAS_HEIGHT = 1200;
         function a() {
             const canvas = document.getElementById('canvas');
 
             // Tweak this to increase/decrease points. Keep reasonable for laptops.
-            const NUM_POINTS = 10000;
+            const NUM_POINTS = 200000;
 
 
             // Three.js setup
@@ -183,7 +183,7 @@
                         vDistanceFromCamera = -viewPosition.z;
 
                         // Scale point size with screen height for consistent density
-                        gl_PointSize = u_pointSize * (u_resolution.y / 600.0) * (1.0 / vDistanceFromCamera);
+                        gl_PointSize = u_pointSize * (u_resolution.y /1200.0) * (1.0 / vDistanceFromCamera);
                     }
                 `,
                 fragmentShader: `
@@ -191,13 +191,22 @@
                     varying float v_index;
                     varying float vDistanceFromCamera;
                     varying float radius;
+                    vec3 starColors[4] = vec3[4](
+                        vec3(1.00, 0.63, 0.63),  // red (M type)
+                        vec3(0.68, 0.85, 1.00), // light blue (O/B type)
+                        // vec3(1.00, 1.00, 1.00), // white (A type)
+                        vec3(1.00, 0.96, 0.83), // pale yellow (F/G type)
+                        vec3(1.00, 0.83, 0.64) // orange (K type)
+                    );
 
                     float rand(vec2 co){
                         return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
                     }
 
                     vec3 colorNoise(float index) {
-                        return vec3(rand(vec2(index)), rand(vec2(index + 1.0)), rand(vec2(index + 2.0)));
+                        index = floor(index);
+                        vec3 color = starColors[int(index) % 2];
+                        return color;
                     }
 
                     void main() {
@@ -206,7 +215,7 @@
                         float d = dot(p, p);
                         if (d > 1.0) { discard; }
                         float cameraFade = 1.0 - smoothstep(0.5, 3.0, vDistanceFromCamera);
-                        float galaxyFade = smoothstep(1.0, 0.0, radius);
+                        float galaxyFade = smoothstep(1.0, 0.5, radius);
                         float fade = cameraFade * galaxyFade;
                         gl_FragColor = vec4(colorNoise(v_index), fade);
                     }
@@ -236,7 +245,7 @@
             // Animation loop
             function animate() {
                 requestAnimationFrame(animate);
-                const time = performance.now() / 100000; // Get time in seconds
+                const time = performance.now() / 10000; // Get time in seconds
                 shaderMaterial.uniforms.u_time.value = time; // Update time uniform
 
                 // Update controls for smooth damping
