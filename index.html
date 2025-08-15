@@ -69,7 +69,7 @@
             const canvas = document.getElementById('canvas');
 
             // Tweak this to increase/decrease points. Keep reasonable for laptops.
-            const NUM_POINTS = 100000;
+            const NUM_POINTS = 50000;
 
 
             // Three.js setup
@@ -154,11 +154,28 @@
                         return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) - 0.5; // Center noise around 0
                     }
 
+                    // float rand(float n){return fract(sin(n) * 43758.5453123);}
+
+                    // vec3 getNoise(float index) {
+                    //     // Generate noise based on the index
+                    //     float noiseX = rand(index);
+                    //     float noiseY = rand(index + 1.0);
+                    //     float noiseZ = rand(index + 2.0);
+                    //     return vec3(noiseX, noiseY, noiseZ);
+                    // }
+
+                    // float noise(float p){
+                    //     float fl = floor(p);
+                    //     float fc = fract(p);
+                    //     return mix(rand(fl), rand(fl + 1.0), fc);
+                    // }
+
                     vec3 getNoise(float index) {
                         return vec3(rand(vec2(index)), rand(vec2(index + 1.0)), rand(vec2(index + 2.0)));
                     }
 
                     vec3 getSpiralCoordinate(float originalIndex) {
+                        v_index = originalIndex;
                         float totalSpirals = 5.0;
                         float totalTurns = 2.0;
                         float pointsPerSpiral = floor(u_totalPoints / totalSpirals);
@@ -176,11 +193,17 @@
                         float angleInSpiral = index / pointsPerSpiral * 3.14159 * 2.0 * totalTurns + angleOffset;
 
                         // Convert polar to Cartesian coordinates
-                        float x = cos(angleInSpiral) * radiusInSpiral;
-                        float y = sin(angleInSpiral) * radiusInSpiral;
-                        vec3 noise = getNoise(originalIndex) * .2 * radiusInSpiral;
-                        v_index = originalIndex;
-                        return vec3(x + noise.x, y + noise.y, noise.z);
+
+                        vec3 noise = getNoise(originalIndex);
+                        radius *=  (1.0 + noise.x / 10.0) *5.0;
+                        angleInSpiral += noise.y * (10.0) * 3.14159 / 180.0; // Add some noise to the angle
+                        float planeAngle = noise.z *  10.0 * 3.14159 / 180.0; // Angle of the spiral plane
+                        
+            
+                        float x = cos(angleInSpiral) * radius;
+                        float y = sin(angleInSpiral) * radius;
+                        float z = sin(planeAngle) * radius; // Height based on radius
+                        return vec3(x, y, z);
                     }
 
                     vec3 getCoordinateFromBlackHole(vec3 position){
@@ -197,8 +220,6 @@
                     
 
                     void main() {
-
-                        // Map grid to [-1, 1] range
                         vec3 pos = getSpiralCoordinate(a_index);
                         // pos = getCoordinateFromBlackHole(pos);
                         vec4 viewPosition = modelViewMatrix * vec4(pos, 1.0);
