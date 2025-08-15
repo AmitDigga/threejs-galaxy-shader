@@ -66,7 +66,7 @@
             const canvas = document.getElementById('canvas');
 
             // Tweak this to increase/decrease points. Keep reasonable for laptops.
-            const NUM_POINTS = 200000;
+            const NUM_POINTS = 100000;
 
 
             // Three.js setup
@@ -123,6 +123,8 @@
                     u_gridRows: { value: gridRows },
                     u_totalPoints: { value: NUM_POINTS },
                     u_time: { value: 0 }, // Add time uniform for potential animations
+                    u_blackHoleRadius: { value: 0.1 }, // Radius of the black hole
+                    u_blackHolePosition: { value: new THREE.Vector3(0, 0.0, 0.0) } // Position of the black hole
                 },
                 vertexShader: `
                     uniform vec2 u_resolution;
@@ -135,6 +137,9 @@
                     varying float v_index;
                     varying float vDistanceFromCamera;
                     varying float radius;
+
+                    uniform float u_blackHoleRadius; // Radius of the black hole
+                    uniform vec3 u_blackHolePosition; // Position of the black hole
 
                     float rand(vec2 co){
                         return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453) - 0.5; // Center noise around 0
@@ -169,6 +174,17 @@
                         return vec3(x + noise.x, y + noise.y, noise.z);
                     }
 
+                    vec3 getCoordinateFromBlackHole(vec3 position){
+                        vec3 vecFromCenter = position - u_blackHolePosition;
+                        float distance = length(vecFromCenter);
+                        if( distance > u_blackHoleRadius || distance < 0.001) {
+                            return position; // Outside black hole radius, return original position
+                        }
+                        // scale position towards the black hole
+                        float scale = u_blackHoleRadius / distance;
+                        return u_blackHolePosition + vecFromCenter * scale;
+                    }
+
                     
 
                     void main() {
@@ -178,6 +194,7 @@
                         
                         // Map grid to [-1, 1] range
                         vec3 pos = getSpiralCoordinate(a_index);
+                        // pos = getCoordinateFromBlackHole(pos);
                         vec4 viewPosition = modelViewMatrix * vec4(pos, 1.0);
                         gl_Position = projectionMatrix * viewPosition;
                         vDistanceFromCamera = -viewPosition.z;
@@ -191,6 +208,8 @@
                     varying float v_index;
                     varying float vDistanceFromCamera;
                     varying float radius;
+                    uniform float u_blackHoleRadius; // Radius of the black hole
+                    uniform vec3 u_blackHolePosition; // Position of the black hole
                     vec3 starColors[4] = vec3[4](
                         vec3(1.00, 0.63, 0.63),  // red (M type)
                         vec3(0.68, 0.85, 1.00), // light blue (O/B type)
