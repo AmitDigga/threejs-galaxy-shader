@@ -176,8 +176,8 @@
 
                     vec3 getSpiralCoordinate(float originalIndex) {
                         v_index = originalIndex;
-                        float totalSpirals = 5.0;
-                        float totalTurns = 2.0;
+                        float totalSpirals = 4.0;
+                        float totalTurns = 1.0;
                         float pointsPerSpiral = floor(u_totalPoints / totalSpirals);
                         float spiralIndex = floor(originalIndex / pointsPerSpiral);
                         float angleOffset = float(spiralIndex) / totalSpirals * 3.14159 * 2.0;
@@ -195,7 +195,7 @@
                         // Convert polar to Cartesian coordinates
 
                         vec3 noise = getNoise(originalIndex);
-                        radius *=  (1.0 + noise.x / 10.0) *5.0;
+                        radius *=  (1.0 + noise.x / 10.0);
                         angleInSpiral += noise.y * (10.0) * 3.14159 / 180.0; // Add some noise to the angle
                         float planeAngle = noise.z *  10.0 * 3.14159 / 180.0; // Angle of the spiral plane
                         
