@@ -69,7 +69,7 @@
             const canvas = document.getElementById('canvas');
 
             // Tweak this to increase/decrease points. Keep reasonable for laptops.
-            const NUM_POINTS = 50000;
+            const NUM_POINTS = 10000;
 
 
             // Three.js setup
@@ -173,6 +173,10 @@
                     vec3 getNoise(float index) {
                         return vec3(rand(vec2(index)), rand(vec2(index + 1.0)), rand(vec2(index + 2.0)));
                     }
+                    float getRand(float index) {
+                    // Range from 0 to 1 for the index
+                        return rand(vec2(index));
+                    }
 
                     vec3 getSpiralCoordinate(float originalIndex) {
                         v_index = originalIndex;
@@ -195,7 +199,7 @@
                         // Convert polar to Cartesian coordinates
 
                         vec3 noise = getNoise(originalIndex);
-                        radius *=  (1.0 + noise.x / 10.0);
+                        radius *=  (1.0 + noise.x / 2.0);
                         angleInSpiral += noise.y * (10.0) * 3.14159 / 180.0; // Add some noise to the angle
                         float planeAngle = noise.z *  10.0 * 3.14159 / 180.0; // Angle of the spiral plane
                         
@@ -227,7 +231,8 @@
                         vDistanceFromCamera = -viewPosition.z;
 
                         // Scale point size with screen height for consistent density
-                        gl_PointSize = u_pointSize * (u_resolution.y /1200.0) * (1.0 / vDistanceFromCamera);
+                        float pointScale= 6.0 * pow(getRand(a_index), 1.0);
+                        gl_PointSize = u_pointSize * pointScale * (u_resolution.y /1200.0) * (1.0 / vDistanceFromCamera);
                     }
                 `,
                 fragmentShader: `
@@ -263,7 +268,8 @@
                         float cameraFade = 1.0 - smoothstep(2.0, 10.0, vDistanceFromCamera);
                         float galaxyFade = 1.0;
                         // float galaxyFade = smoothstep(1.0, 0.5, radius);
-                        float fade = cameraFade * galaxyFade;
+                        // float fade = cameraFade * galaxyFade;
+                        float fade = 1.0;
                         gl_FragColor = vec4(colorNoise(v_index), fade);
                     }
                 `,
