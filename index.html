@@ -69,7 +69,8 @@
             const canvas = document.getElementById('canvas');
 
             // Tweak this to increase/decrease points. Keep reasonable for laptops.
-            const NUM_POINTS = 10000;
+            const NUM_POINTS = 30000;
+            const BLACK_HOLE_RADIUS = 0.2;
 
 
             // Three.js setup
@@ -134,7 +135,7 @@
                     u_pointSize: { value: 2.0 },
                     u_totalPoints: { value: NUM_POINTS },
                     u_time: { value: 0 }, // Add time uniform for potential animations
-                    u_blackHoleRadius: { value: 0.1 }, // Radius of the black hole
+                    u_blackHoleRadius: { value: BLACK_HOLE_RADIUS }, // Radius of the black hole
                     u_blackHolePosition: { value: new THREE.Vector3(0, 0.0, 0.0) } // Position of the black hole
                 },
                 vertexShader: `
@@ -207,7 +208,8 @@
                         float x = cos(angleInSpiral) * radius;
                         float y = sin(angleInSpiral) * radius;
                         float z = sin(planeAngle) * radius; // Height based on radius
-                        return vec3(x, y, z);
+                        float randomZ = (getRand(originalIndex) - 0.5) * 0.2;
+                        return vec3(x, y, z + randomZ);
                     }
 
                     vec3 getCoordinateFromBlackHole(vec3 position){
@@ -225,13 +227,13 @@
 
                     void main() {
                         vec3 pos = getSpiralCoordinate(a_index);
-                        // pos = getCoordinateFromBlackHole(pos);
+                        pos = getCoordinateFromBlackHole(pos);
                         vec4 viewPosition = modelViewMatrix * vec4(pos, 1.0);
                         gl_Position = projectionMatrix * viewPosition;
                         vDistanceFromCamera = -viewPosition.z;
 
                         // Scale point size with screen height for consistent density
-                        float pointScale= 8.0 * pow(getRand(a_index), 3.0);
+                        float pointScale= 4.0 * pow(getRand(a_index), 3.0);
                         gl_PointSize = u_pointSize * pointScale * (u_resolution.y /1200.0) * (1.0 / vDistanceFromCamera);
                     }
                 `,
@@ -243,11 +245,11 @@
                     uniform float u_blackHoleRadius; // Radius of the black hole
                     uniform vec3 u_blackHolePosition; // Position of the black hole
                     vec3 starColors[4] = vec3[4](
-                        vec3(1.00, 0.63, 0.63),  // red (M type)
-                        vec3(0.68, 0.85, 1.00), // light blue (O/B type)
-                        // vec3(1.00, 1.00, 1.00), // white (A type)
-                        vec3(1.00, 0.96, 0.83), // pale yellow (F/G type)
-                        vec3(1.00, 0.83, 0.64) // orange (K type)
+                    // Light blue color
+                     vec3(0.25, 0.28, .7),
+                     vec3(0.7, 0.28, .25),
+                     vec3(0.7, 0.25, 0.6),
+                     vec3(0.7, 0.7, .7)
                     );
 
                     float rand(vec2 co){
@@ -282,6 +284,10 @@
             // Create Points object and add to scene
             const points = new THREE.Points(geometry, shaderMaterial);
             scene.add(points);
+            const blackHoleGeometry = new THREE.SphereGeometry(BLACK_HOLE_RADIUS, 32, 32);
+            const blackHoleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
+            scene.add(blackHole);
 
             // Handle window resize
             // function onWindowResize() {
