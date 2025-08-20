@@ -164,7 +164,7 @@
 
                     vec3 getSpiralCoordinate(float originalIndex) {
                         v_index = originalIndex;
-                        float totalSpirals = 4.0;
+                        float totalSpirals = 3.0;
                         float totalTurns = 1.0;
                         float pointsPerSpiral = floor(u_totalPoints / totalSpirals);
                         float spiralIndex = floor(originalIndex / pointsPerSpiral);
@@ -182,7 +182,7 @@
 
                         // Convert polar to Cartesian coordinates
 
-                        vec3 noise = getNoiseM1To1(originalIndex);
+                        vec3 noise = getNoiseM1To1(originalIndex) * .4;
                         radius *=  (1.0 + noise.x / 2.0);
                         angleInSpiral += noise.y * (10.0) * 3.14159 / 180.0; // Add some noise to the angle
                         float planeAngle = noise.z *  5.0 * 3.14159 / 180.0; // Angle of the spiral plane
@@ -217,7 +217,7 @@
                         vDistanceFromCamera = -viewPosition.z;
 
                         // Scale point size with screen height for consistent density
-                        float pointScale= 4.0 * pow(getRand01(a_index + 7.0), 3.0);
+                        float pointScale= 4.0 * pow(getRand01(a_index + 7.0)+ 0.1, 3.0);
                         gl_PointSize = u_pointSize * pointScale * (u_resolution.y /1200.0) * (1.0 / vDistanceFromCamera);
                     }
                 `,
@@ -233,7 +233,7 @@
                      vec3(0.25, 0.28, .7),
                      vec3(0.7, 0.28, .25),
                      vec3(0.7, 0.25, 0.6),
-                     vec3(0.7, 0.7, .7)
+                     vec3(0.98, 0.85, .1)
                     );
 
                     float randM1To1(vec2 co){
