@@ -3,8 +3,14 @@
   "version": "0.9.0",
   "description": "A efficient galaxy rendered for the web.",
   "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/common/index.js"
+    }
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build && tsc --build -f tsconfig.commonjs.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

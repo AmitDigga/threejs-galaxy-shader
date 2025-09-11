@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "target": "esnext",
+    "module": "commonjs",
+    "target": "es2015",
     "types": [],
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "dist/esm",
+    "outDir": "dist/common",
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "strict": true,
