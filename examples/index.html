@@ -58,15 +58,15 @@
 <body>
     <div id="app">
         <div class="canvas-container">
-            <div class="canvas-label">Classic 3-Arm</div>
+            <div class="canvas-label">Classic Mixed</div>
             <canvas id="canvas1"></canvas>
         </div>
         <div class="canvas-container">
-            <div class="canvas-label">Dense 5-Arm</div>
+            <div class="canvas-label">Radial Gradient</div>
             <canvas id="canvas2"></canvas>
         </div>
         <div class="canvas-container">
-            <div class="canvas-label">Tight Spiral</div>
+            <div class="canvas-label">Blue Giant</div>
             <canvas id="canvas3"></canvas>
         </div>
         <div class="canvas-container">
@@ -74,23 +74,23 @@
             <canvas id="canvas4"></canvas>
         </div>
         <div class="canvas-container">
-            <div class="canvas-label">Small Stars</div>
+            <div class="canvas-label">Single Orange</div>
             <canvas id="canvas5"></canvas>
         </div>
         <div class="canvas-container">
-            <div class="canvas-label">Fast Rotation</div>
+            <div class="canvas-label">Single Green</div>
             <canvas id="canvas6"></canvas>
         </div>
         <div class="canvas-container">
-            <div class="canvas-label">Sparse Galaxy</div>
+            <div class="canvas-label">Red Giant</div>
             <canvas id="canvas7"></canvas>
         </div>
         <div class="canvas-container">
-            <div class="canvas-label">Blue Giant</div>
+            <div class="canvas-label">Purple-Blue</div>
             <canvas id="canvas8"></canvas>
         </div>
         <div class="canvas-container">
-            <div class="canvas-label">Red Dwarf</div>
+            <div class="canvas-label">Nebula Colors</div>
             <canvas id="canvas9"></canvas>
         </div>
     </div>
@@ -118,78 +118,124 @@
         import { GalaxyGeometry } from 'galaxy-geometry';
 
         const galaxyConfigs = [
-            { // Classic 3-Arm
+            { // Classic Mixed Stars (Default color array)
                 spiralCount: 3,
                 turnsPerSpiral: 1.0,
                 totalStars: 20000,
                 pointSize: 2.0,
                 blackHoleRadius: 0.1,
-                color: new THREE.Color(0.92, 0.94, 1.0)
+                colorMode: 0, // Fixed array cycling
+                colorIntensity: 1.0
             },
-            { // Dense 5-Arm
+            { // Radial Gradient (Hot core to cool edge)
                 spiralCount: 5,
                 turnsPerSpiral: 1.2,
                 totalStars: 35000,
                 pointSize: 1.5,
                 blackHoleRadius: 0.08,
-                color: new THREE.Color(0.9, 0.9, 1.0)
+                colorMode: 1, // Gradient by radius
+                colorPalette: [
+                    new THREE.Color(1.0, 1.0, 0.8),  // Hot white core
+                    new THREE.Color(1.0, 0.8, 0.6),  // Warm yellow
+                    new THREE.Color(0.8, 0.6, 1.0),  // Cool blue
+                    new THREE.Color(0.4, 0.5, 0.8)   // Cold blue edge
+                ],
+                colorIntensity: 1.2
             },
-            { // Tight Spiral
+            { // Blue Giant Palette
                 spiralCount: 2,
                 turnsPerSpiral: 2.5,
                 totalStars: 15000,
                 pointSize: 2.5,
                 blackHoleRadius: 0.15,
-                color: new THREE.Color(1.0, 0.95, 0.8)
+                colorMode: 0, // Fixed array
+                colorPalette: [
+                    new THREE.Color(0.7, 0.8, 1.0),   // Blue
+                    new THREE.Color(0.8, 0.9, 1.0),   // Light blue
+                    new THREE.Color(0.9, 0.95, 1.0),  // White-blue
+                    new THREE.Color(1.0, 1.0, 1.0)    // Pure white
+                ],
+                colorIntensity: 1.1
             },
-            { // Large Black Hole
+            { // Large Black Hole Galaxy
                 spiralCount: 4,
                 turnsPerSpiral: 0.8,
                 totalStars: 25000,
                 pointSize: 2.0,
                 blackHoleRadius: 0.3,
-                color: new THREE.Color(0.8, 0.9, 1.0)
+                colorMode: 1, // Radial gradient
+                colorPalette: [
+                    new THREE.Color(1.0, 1.0, 1.0),   // Bright white center
+                    new THREE.Color(1.0, 0.9, 0.7),   // Warm white
+                    new THREE.Color(0.9, 0.7, 0.5),   // Orange
+                    new THREE.Color(0.7, 0.5, 0.3)    // Dark orange edge
+                ],
+                colorIntensity: 1.0
             },
-            { // Small Stars
+            { // Single Color Galaxy
                 spiralCount: 3,
                 turnsPerSpiral: 1.0,
                 totalStars: 40000,
                 pointSize: 1.0,
                 blackHoleRadius: 0.12,
-                color: new THREE.Color(1.0, 1.0, 0.9)
+                colorMode: 2, // Single color
+                color: new THREE.Color(1.0, 0.8, 0.6), // Warm orange
+                colorIntensity: 1.0
             },
-            { // Fast Rotation (will be animated faster)
-                spiralCount: 3,
+            { // Dense Green Galaxy
+                spiralCount: 6,
                 turnsPerSpiral: 1.5,
-                totalStars: 22000,
-                pointSize: 2.2,
+                totalStars: 32000,
+                pointSize: 1.8,
                 blackHoleRadius: 0.1,
-                color: new THREE.Color(0.95, 0.85, 1.0),
-                timeScale: 3.0
+                colorMode: 2, // Single color
+                color: new THREE.Color(0.6, 1.0, 0.8), // Soft green
+                colorIntensity: 1.1
             },
-            { // Sparse Galaxy
+            { // Red Giant Galaxy
                 spiralCount: 2,
                 turnsPerSpiral: 0.6,
                 totalStars: 8000,
                 pointSize: 3.0,
                 blackHoleRadius: 0.2,
-                color: new THREE.Color(1.0, 0.9, 0.7)
+                colorMode: 0, // Fixed array
+                colorPalette: [
+                    new THREE.Color(1.0, 0.6, 0.4),   // Orange-red
+                    new THREE.Color(1.0, 0.7, 0.5),   // Orange
+                    new THREE.Color(1.0, 0.8, 0.6),   // Light orange
+                    new THREE.Color(1.0, 0.9, 0.7)    // Pale yellow
+                ],
+                colorIntensity: 1.0
             },
-            { // Blue Giant
-                spiralCount: 6,
+            { // Purple-Blue Galaxy
+                spiralCount: 5,
                 turnsPerSpiral: 1.0,
-                totalStars: 30000,
-                pointSize: 1.8,
-                blackHoleRadius: 0.05,
-                color: new THREE.Color(0.7, 0.8, 1.0)
+                totalStars: 28000,
+                pointSize: 2.0,
+                blackHoleRadius: 0.08,
+                colorMode: 0, // Fixed array
+                colorPalette: [
+                    new THREE.Color(0.8, 0.4, 1.0),   // Purple
+                    new THREE.Color(0.6, 0.6, 1.0),   // Blue-purple
+                    new THREE.Color(0.4, 0.8, 1.0),   // Light blue
+                    new THREE.Color(0.8, 0.9, 1.0)    // Very light blue
+                ],
+                colorIntensity: 1.2
             },
-            { // Red Dwarf
+            { // Nebula Colors (Radial gradient)
                 spiralCount: 4,
                 turnsPerSpiral: 0.8,
                 totalStars: 12000,
                 pointSize: 2.8,
                 blackHoleRadius: 0.25,
-                color: new THREE.Color(1.0, 0.7, 0.6)
+                colorMode: 1, // Gradient by radius
+                colorPalette: [
+                    new THREE.Color(1.0, 0.9, 0.8),   // Warm center
+                    new THREE.Color(1.0, 0.6, 0.8),   // Pink
+                    new THREE.Color(0.6, 0.4, 1.0),   // Purple
+                    new THREE.Color(0.2, 0.3, 0.8)    // Deep blue edge
+                ],
+                colorIntensity: 1.1
             }
         ];
 
@@ -247,7 +293,11 @@
                 blackHoleRadius: config.blackHoleRadius,
                 blackHolePosition: new THREE.Vector3(0, 0.0, 0.0),
                 spiralCount: config.spiralCount,
-                turnsPerSpiral: config.turnsPerSpiral
+                turnsPerSpiral: config.turnsPerSpiral,
+                // New color parameters
+                colorMode: config.colorMode,
+                colorPalette: config.colorPalette,
+                colorIntensity: config.colorIntensity
             });
 
             const points = new THREE.Points(geometry, shaderMaterial);
