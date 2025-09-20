@@ -1,8 +1,10 @@
 {
   "name": "threejs-galaxy-shader",
-  "version": "0.9.0",
-  "description": "A efficient galaxy rendered for the web.",
-  "main": "dist/index.js",
+  "version": "0.9.1",
+  "description": "A performant Three.js galaxy shader with customizable colors, spiral patterns, and black hole effects",
+  "main": "dist/common/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/esm/index.js",
@@ -11,13 +13,28 @@
   },
   "scripts": {
     "build": "tsc --build && tsc --build -f tsconfig.commonjs.json",
-    "build:watch": "tsc --build --watch && tsc --build -f tsconfig.commonjs.json --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-esm:watch": "tsc --build --watch",
+    "build-commonjs:watch": "tsc --build -f tsconfig.commonjs.json --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": { 
+    "type": "git",
+    "url": "https://github.com/AmitDigga/threejs-galaxy-shader"
   },
   "keywords": [
     "threejs",
     "galaxy",
-    "shader"
+    "shader",
+    "webgl",
+    "particles",
+    "space",
+    "astronomy",
+    "visualization"
   ],
   "peerDependencies": {
     "three": "^0.136.0"
