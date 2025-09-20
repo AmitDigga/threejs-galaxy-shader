@@ -51,7 +51,8 @@
     				"imports": {
     					"three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
     					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/",
-    					"galaxy-shader": "../dist/esm/GalaxyShader.js"
+    					"galaxy-shader": "../dist/esm/GalaxyShader.js",
+    					"galaxy-geometry": "../dist/esm/GalaxyGeometry.js"
     				}
     			}
     		</script>
@@ -65,16 +66,14 @@
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         import { GalaxyShader } from 'galaxy-shader';
+        import { GalaxyGeometry } from 'galaxy-geometry';
         const CANVAS_WIDTH = 1200;
         const CANVAS_HEIGHT = 1200;
         function a() {
             const canvas = document.getElementById('canvas');
 
-            // Tweak this to increase/decrease points. Keep reasonable for laptops.
             const NUM_POINTS = 30000;
             const BLACK_HOLE_RADIUS = 0.1;
-
-
             // Three.js setup
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1000);
@@ -113,23 +112,8 @@
             camera.position.set(0, -1, .4);
 
 
-            // Create geometry with only point indices
-            const geometry = new THREE.BufferGeometry();
-            const indices = new Float32Array(NUM_POINTS); // Only need the index
-            const dummyPositions = new Float32Array(NUM_POINTS * 3); // Dummy positions (will be overridden in shader)
 
-            for (let i = 0; i < NUM_POINTS; i++) {
-                indices[i] = i;
-                // Set dummy positions (these will be ignored in the vertex shader)
-                dummyPositions[i * 3] = 0;
-                dummyPositions[i * 3 + 1] = 0;
-                dummyPositions[i * 3 + 2] = 0;
-            }
-
-            geometry.setAttribute('position', new THREE.BufferAttribute(dummyPositions, 3));
-            geometry.setAttribute('a_index', new THREE.BufferAttribute(indices, 1));
-
-            // Custom ShaderMaterial for points
+            const geometry = new GalaxyGeometry(NUM_POINTS);
             const shaderMaterial = new GalaxyShader({
                 u_resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
                 value: new THREE.Color(0.92, 0.94, 1.0),
@@ -148,29 +132,12 @@
             const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
             scene.add(blackHole);
 
-            // Handle window resize
-            // function onWindowResize() {
-            //     camera.aspect = window.innerWidth / window.innerHeight;
-            //     camera.updateProjectionMatrix();
-
-            //     renderer.setSize(window.innerWidth, window.innerHeight);
-
-            //     // Update resolution uniform
-            //     shaderMaterial.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-            // }
-
-            // window.addEventListener('resize', onWindowResize);
-
             // Animation loop
             function animate() {
                 requestAnimationFrame(animate);
                 const time = performance.now() / 10000 / 5; // Get time in seconds
                 shaderMaterial.uniforms.u_time.value = time; // Update time uniform
-
-                // Update controls for smooth damping
                 controls.update();
-
-                // Render the scene with post-processing
                 composer.render();
             }
 
