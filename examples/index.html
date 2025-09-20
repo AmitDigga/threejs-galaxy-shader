@@ -17,81 +17,51 @@
         }
 
         #app {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            height: 100vh;
-            width: 100vw;
-            gap: 2px;
-            box-sizing: border-box;
-        }
-
-        .canvas-container {
             position: relative;
-            background: #111;
-            min-height: 0;
-            min-width: 0;
-            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
         }
 
-        .canvas-container canvas {
+        #galaxy-canvas {
             width: 100%;
             height: 100%;
             display: block;
-            object-fit: cover;
         }
 
-        .canvas-label {
+        .controls {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
+            font-size: 14px;
+            max-width: 300px;
+        }
+
+        .controls h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .controls p {
+            margin: 5px 0;
             font-size: 12px;
-            z-index: 10;
+            opacity: 0.8;
         }
     </style>
 </head>
 
 <body>
     <div id="app">
-        <div class="canvas-container">
-            <div class="canvas-label">Classic Mixed</div>
-            <canvas id="canvas1"></canvas>
-        </div>
-        <div class="canvas-container">
-            <div class="canvas-label">Radial Gradient</div>
-            <canvas id="canvas2"></canvas>
-        </div>
-        <div class="canvas-container">
-            <div class="canvas-label">Blue Giant</div>
-            <canvas id="canvas3"></canvas>
-        </div>
-        <div class="canvas-container">
-            <div class="canvas-label">Large Black Hole</div>
-            <canvas id="canvas4"></canvas>
-        </div>
-        <div class="canvas-container">
-            <div class="canvas-label">Single Orange</div>
-            <canvas id="canvas5"></canvas>
-        </div>
-        <div class="canvas-container">
-            <div class="canvas-label">Single Green</div>
-            <canvas id="canvas6"></canvas>
-        </div>
-        <div class="canvas-container">
-            <div class="canvas-label">Red Giant</div>
-            <canvas id="canvas7"></canvas>
-        </div>
-        <div class="canvas-container">
-            <div class="canvas-label">Purple-Blue</div>
-            <canvas id="canvas8"></canvas>
-        </div>
-        <div class="canvas-container">
-            <div class="canvas-label">Nebula Colors</div>
-            <canvas id="canvas9"></canvas>
+        <canvas id="galaxy-canvas"></canvas>
+        <div class="controls">
+            <h3>Galaxy Grid View</h3>
+            <p>9 different galaxies in a 3×3 arrangement</p>
+            <p>Top-down view showing spiral structures</p>
+            <p>Use mouse to orbit • Scroll to zoom</p>
         </div>
     </div>
 
@@ -239,19 +209,17 @@
             }
         ];
 
-        function createGalaxy(canvasId, config, index) {
-            const canvas = document.getElementById(canvasId);
-            const container = canvas.parentElement;
-            const rect = container.getBoundingClientRect();
-            const width = rect.width;
-            const height = rect.height;
+        function createGalaxyGrid() {
+            const canvas = document.getElementById('galaxy-canvas');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
 
             // Three.js setup
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({
                 canvas: canvas,
-                antialias: false,
+                antialias: true,
                 alpha: false,
                 powerPreference: 'high-performance',
             });
@@ -267,9 +235,9 @@
 
             const bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(width, height),
-                1.5,    // strength (reduced for grid)
-                0.8,    // radius
-                0.9     // threshold
+                1.2,    // strength
+                0.6,    // radius
+                0.85    // threshold
             );
             composer.addPass(bloomPass);
 
@@ -278,43 +246,129 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.screenSpacePanning = false;
-            controls.minDistance = 0.5;
-            controls.maxDistance = 10;
-            camera.position.set(0, -1, 0.4);
+            controls.minDistance = 2;
+            controls.maxDistance = 50;
 
-            // Create galaxy
-            const geometry = new GalaxyGeometry(config.totalStars);
-            const shaderMaterial = new GalaxyShader({
-                resolution: new THREE.Vector2(width, height),
-                color: config.color,
-                pointSize: config.pointSize,
-                totalStars: config.totalStars,
-                time: 0,
-                blackHoleRadius: config.blackHoleRadius,
-                blackHolePosition: new THREE.Vector3(0, 0.0, 0.0),
-                spiralCount: config.spiralCount,
-                turnsPerSpiral: config.turnsPerSpiral,
-                // New color parameters
-                colorMode: config.colorMode,
-                colorPalette: config.colorPalette,
-                colorIntensity: config.colorIntensity
-            });
+            // Position camera to view all galaxies from above
+            camera.position.set(0, 12, 0);
+            controls.target.set(0, 0, 0);
 
-            const points = new THREE.Points(geometry, shaderMaterial);
-            scene.add(points);
+            // Create 3x3 grid of galaxies
+            const galaxySpacing = 3; // Distance between galaxy centers (reduced from 4)
+            const galaxyScale = 0.8; // Scale down each galaxy
+            const galaxies = [];
+            const shaderMaterials = [];
 
-            // Add black hole visualization
-            const blackHoleGeometry = new THREE.SphereGeometry(config.blackHoleRadius, 16, 16);
-            const blackHoleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
-            scene.add(blackHole);
+            // Galaxy names for labels
+            const galaxyNames = [
+                'Classic Mixed', 'Radial Gradient', 'Blue Giant',
+                'Large Black Hole', 'Single Orange', 'Single Green',
+                'Red Giant', 'Purple-Blue', 'Nebula Colors'
+            ];
+
+            for (let i = 0; i < 9; i++) {
+                const config = galaxyConfigs[i];
+                const row = Math.floor(i / 3);
+                const col = i % 3;
+
+                // Calculate position in 3x3 grid
+                const x = (col - 1) * galaxySpacing;
+                const z = (row - 1) * galaxySpacing;
+                const y = 0;
+
+                // Create galaxy group
+                const galaxyGroup = new THREE.Group();
+                galaxyGroup.position.set(x, y, z);
+                galaxyGroup.scale.setScalar(galaxyScale);
+
+                // Rotate galaxy to lie flat on the XZ plane (90 degrees around X axis)
+                galaxyGroup.rotation.x = Math.PI / 2;
+
+                // Create galaxy geometry and material
+                const geometry = new GalaxyGeometry(config.totalStars);
+                const shaderMaterial = new GalaxyShader({
+                    resolution: new THREE.Vector2(width, height),
+                    color: config.color,
+                    pointSize: config.pointSize * 1.5, // Compensate for scaling
+                    totalStars: config.totalStars,
+                    time: 0,
+                    blackHoleRadius: config.blackHoleRadius,
+                    blackHolePosition: new THREE.Vector3(0, 0.0, 0.0),
+                    spiralCount: config.spiralCount,
+                    turnsPerSpiral: config.turnsPerSpiral,
+                    colorMode: config.colorMode,
+                    colorPalette: config.colorPalette,
+                    colorIntensity: config.colorIntensity,
+                    fadeNear: 5.0,
+                    fadeFar: 100.0,
+                });
+
+                const points = new THREE.Points(geometry, shaderMaterial);
+                galaxyGroup.add(points);
+
+                // Add black hole visualization
+                const blackHoleGeometry = new THREE.SphereGeometry(config.blackHoleRadius, 16, 16);
+                const blackHoleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+                const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
+                galaxyGroup.add(blackHole);
+
+                // Create text label
+                const canvas2d = document.createElement('canvas');
+                const context = canvas2d.getContext('2d');
+                canvas2d.width = 512;
+                canvas2d.height = 128;
+
+                context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                context.fillRect(0, 0, canvas2d.width, canvas2d.height);
+
+                context.font = '32px Arial';
+                context.fillStyle = 'white';
+                context.textAlign = 'center';
+                context.fillText(galaxyNames[i], canvas2d.width / 2, canvas2d.height / 2 + 10);
+
+                const texture = new THREE.CanvasTexture(canvas2d);
+                const labelMaterial = new THREE.SpriteMaterial({ map: texture });
+                const label = new THREE.Sprite(labelMaterial);
+                label.position.set(1.8, 0, 0); // Position to the right of each galaxy
+                label.scale.set(1.5, 0.375, 1); // Slightly smaller labels
+                galaxyGroup.add(label);
+
+                scene.add(galaxyGroup);
+                galaxies.push(galaxyGroup);
+                shaderMaterials.push(shaderMaterial);
+            }
+
+            // Handle window resize
+            function handleResize() {
+                const newWidth = window.innerWidth;
+                const newHeight = window.innerHeight;
+
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(newWidth, newHeight, false);
+                composer.setSize(newWidth, newHeight);
+
+                // Update resolution uniforms
+                shaderMaterials.forEach(material => {
+                    material.uniforms.u_resolution.value.set(newWidth, newHeight);
+                });
+            }
+
+            window.addEventListener('resize', handleResize);
 
             // Animation loop
             function animate() {
                 requestAnimationFrame(animate);
-                const timeScale = config.timeScale || 1.0;
-                const time = (performance.now() / 10000 / 5) * timeScale;
-                shaderMaterial.uniforms.u_time.value = time;
+
+                const time = performance.now() / 10000 / 5;
+
+                // Update time for all galaxies
+                shaderMaterials.forEach((material, index) => {
+                    const timeScale = galaxyConfigs[index].timeScale || 1.0;
+                    material.uniforms.u_time.value = time * timeScale;
+                });
+
                 controls.update();
                 composer.render();
             }
@@ -322,14 +376,9 @@
             animate();
         }
 
-        function initGalaxies() {
-            for (let i = 1; i <= 9; i++) {
-                createGalaxy(`canvas${i}`, galaxyConfigs[i - 1], i);
-            }
-        }
-
+        // Initialize when page loads
         setTimeout(() => {
-            initGalaxies();
+            createGalaxyGrid();
         }, 1000);
     </script>
 </body>
