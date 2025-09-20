@@ -124,29 +124,27 @@ const FRAGMENT_SHADER = `
     }
 `;
 
-type Params = {
-  u_resolution: THREE.Vector2;
-  u_color: THREE.Color;
-  u_pointSize: number;
-  u_totalPoints: number;
-  u_time: number;
-  u_blackHoleRadius: number;
-  u_blackHolePosition: THREE.Vector3;
+type GalaxyShaderParams = {
+  resolution: THREE.Vector2;
+  color: THREE.Color;
+  pointSize: number;
+  totalStars: number;
+  time: number;
+  blackHoleRadius: number;
+  blackHolePosition: THREE.Vector3;
 };
 
 export class GalaxyShader extends THREE.ShaderMaterial {
-  constructor(params: Params) {
+  constructor(params: GalaxyShaderParams) {
     super({
       uniforms: {
-        u_resolution: {
-          value: params.u_resolution,
-        },
-        u_color: { value: params.u_color },
-        u_pointSize: { value: params.u_pointSize },
-        u_totalPoints: { value: params.u_totalPoints },
-        u_time: { value: params.u_time },
-        u_blackHoleRadius: { value: params.u_blackHoleRadius },
-        u_blackHolePosition: { value: params.u_blackHolePosition },
+        u_resolution: { value: params.resolution },
+        u_color: { value: params.color },
+        u_pointSize: { value: params.pointSize },
+        u_totalPoints: { value: params.totalStars },
+        u_time: { value: params.time },
+        u_blackHoleRadius: { value: params.blackHoleRadius },
+        u_blackHolePosition: { value: params.blackHolePosition },
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,

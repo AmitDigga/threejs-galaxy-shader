@@ -115,13 +115,13 @@
 
             const geometry = new GalaxyGeometry(NUM_POINTS);
             const shaderMaterial = new GalaxyShader({
-                u_resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-                value: new THREE.Color(0.92, 0.94, 1.0),
-                u_pointSize: 2.0,
-                u_totalPoints: NUM_POINTS,
-                u_time: 0, // Add time uniform for potential animations
-                u_blackHoleRadius: BLACK_HOLE_RADIUS, // Radius of the black hole
-                u_blackHolePosition: new THREE.Vector3(0, 0.0, 0.0) // Position of the black hole
+                resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+                color: new THREE.Color(0.92, 0.94, 1.0),
+                pointSize: 2.0,
+                totalStars: NUM_POINTS,
+                time: 0, // Add time uniform for potential animations
+                blackHoleRadius: BLACK_HOLE_RADIUS, // Radius of the black hole
+                blackHolePosition: new THREE.Vector3(0, 0.0, 0.0) // Position of the black hole
             });
 
             // Create Points object and add to scene
