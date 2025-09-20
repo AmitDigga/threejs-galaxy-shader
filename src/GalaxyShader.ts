@@ -24,10 +24,15 @@ const VERTEX_SHADER = `
       return randM1To1(vec2(index,index+5.0)) / 2.0 + 0.5; // Center noise around 0.5
   }
 
+  uniform float u_spiralCount;
+  uniform float u_turnsPerSpiral;
+  uniform float u_fadeNear;
+  uniform float u_fadeFar;
+
   vec3 getSpiralCoordinate(float originalIndex) {
       v_index = originalIndex;
-      float totalSpirals = 3.0;
-      float totalTurns = 1.0;
+      float totalSpirals = u_spiralCount;
+      float totalTurns = u_turnsPerSpiral;
       float pointsPerSpiral = floor(u_totalPoints / totalSpirals);
       float spiralIndex = floor(originalIndex / pointsPerSpiral);
       float angleOffset = float(spiralIndex) / totalSpirals * 3.14159 * 2.0;
@@ -86,6 +91,8 @@ const VERTEX_SHADER = `
 
 const FRAGMENT_SHADER = `
     uniform vec3 u_color;
+    uniform float u_fadeNear;
+    uniform float u_fadeFar;
     varying float v_index;
     varying float vDistanceFromCamera;
     varying float radius;
@@ -115,7 +122,7 @@ const FRAGMENT_SHADER = `
         float d = dot(p, p);
         if (d > 1.0) { discard; }
         // float cameraFade = 1.0;
-        float cameraFade = 1.0 - smoothstep(1.0, 5.0, vDistanceFromCamera);
+        float cameraFade = 1.0 - smoothstep(u_fadeNear, u_fadeFar, vDistanceFromCamera);
         float galaxyFade = 1.0;
         // float galaxyFade = smoothstep(1.0, 0.5, radius);
         float fade = cameraFade * galaxyFade;
@@ -125,26 +132,38 @@ const FRAGMENT_SHADER = `
 `;
 
 type GalaxyShaderParams = {
-  resolution: THREE.Vector2;
-  color: THREE.Color;
-  pointSize: number;
-  totalStars: number;
-  time: number;
-  blackHoleRadius: number;
-  blackHolePosition: THREE.Vector3;
+  resolution?: THREE.Vector2;
+  color?: THREE.Color;
+  pointSize?: number;
+  totalStars?: number;
+  time?: number;
+  blackHoleRadius?: number;
+  blackHolePosition?: THREE.Vector3;
+  spiralCount?: number;
+  turnsPerSpiral?: number;
+  fadeNear?: number;
+  fadeFar?: number;
 };
 
 export class GalaxyShader extends THREE.ShaderMaterial {
-  constructor(params: GalaxyShaderParams) {
+  constructor(params: GalaxyShaderParams = {}) {
     super({
       uniforms: {
-        u_resolution: { value: params.resolution },
-        u_color: { value: params.color },
-        u_pointSize: { value: params.pointSize },
-        u_totalPoints: { value: params.totalStars },
-        u_time: { value: params.time },
-        u_blackHoleRadius: { value: params.blackHoleRadius },
-        u_blackHolePosition: { value: params.blackHolePosition },
+        u_resolution: {
+          value: params.resolution ?? new THREE.Vector2(1200, 1200),
+        },
+        u_color: { value: params.color ?? new THREE.Color(0xffffff) },
+        u_pointSize: { value: params.pointSize ?? 2.0 },
+        u_totalPoints: { value: params.totalStars ?? 10000 },
+        u_time: { value: params.time ?? 0 },
+        u_blackHoleRadius: { value: params.blackHoleRadius ?? 0.2 },
+        u_blackHolePosition: {
+          value: params.blackHolePosition ?? new THREE.Vector3(0, 0, 0),
+        },
+        u_spiralCount: { value: params.spiralCount ?? 3 },
+        u_turnsPerSpiral: { value: params.turnsPerSpiral ?? 1 },
+        u_fadeNear: { value: params.fadeNear ?? 1.0 },
+        u_fadeFar: { value: params.fadeFar ?? 5.0 },
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,
