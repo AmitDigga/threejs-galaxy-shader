@@ -211,12 +211,9 @@ export class GalaxyShader extends THREE.ShaderMaterial {
 
     // Fill with provided colors or defaults
     for (let i = 0; i < 8; i++) {
-      if (i < colorPalette.length && colorPalette[i]) {
-        paddedPalette[i] = new THREE.Vector3(
-          colorPalette[i].r,
-          colorPalette[i].g,
-          colorPalette[i].b
-        );
+      const color = colorPalette[i];
+      if (i < colorPalette.length && color) {
+        paddedPalette[i] = new THREE.Vector3(color.r, color.g, color.b);
       } else {
         // Default fallback colors
         paddedPalette[i] = new THREE.Vector3(1.0, 1.0, 1.0);
