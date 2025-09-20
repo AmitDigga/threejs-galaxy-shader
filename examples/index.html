@@ -61,7 +61,9 @@
             <h3>Galaxy Grid View</h3>
             <p>9 different galaxies in a 3×3 arrangement</p>
             <p>Top-down view showing spiral structures</p>
-            <p>Use mouse to orbit • Scroll to zoom</p>
+            <p>Mouse to orbit • Scroll to zoom</p>
+            <p>Hover to highlight • Double-click to focus</p>
+            <p>Double-click empty space to reset view</p>
         </div>
     </div>
 
@@ -258,6 +260,22 @@
             const galaxyScale = 0.8; // Scale down each galaxy
             const galaxies = [];
             const shaderMaterials = [];
+            const galaxyBounds = []; // For mouse interaction detection
+
+            // Mouse interaction setup
+            const mouse = new THREE.Vector2();
+            const raycaster = new THREE.Raycaster();
+            let hoveredGalaxy = -1; // Index of currently hovered galaxy (-1 = none)
+            let focusedGalaxy = -1; // Index of currently focused/zoomed galaxy (-1 = none)
+            let isAnimating = false; // Prevent interactions during camera animation
+
+            // Store original color configurations for restoration
+            const originalConfigs = galaxyConfigs.map(config => ({
+                colorMode: config.colorMode,
+                colorPalette: config.colorPalette ? [...config.colorPalette] : undefined,
+                color: config.color ? config.color.clone() : undefined,
+                colorIntensity: config.colorIntensity
+            }));
 
             // Galaxy names for labels
             const galaxyNames = [
@@ -316,6 +334,18 @@
                 const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
                 galaxyGroup.add(blackHole);
 
+                // Create invisible bounding box for mouse interaction (larger than the galaxy)
+                const boundingGeometry = new THREE.PlaneGeometry(2.5, 2.5); // Adjust size as needed
+                const boundingMaterial = new THREE.MeshBasicMaterial({
+                    transparent: true,
+                    opacity: 0,
+                    side: THREE.DoubleSide
+                });
+                const boundingMesh = new THREE.Mesh(boundingGeometry, boundingMaterial);
+                boundingMesh.userData = { galaxyIndex: i }; // Store galaxy index for identification
+                galaxyGroup.add(boundingMesh);
+                galaxyBounds.push(boundingMesh);
+
                 // Create text label
                 const canvas2d = document.createElement('canvas');
                 const context = canvas2d.getContext('2d');
@@ -360,6 +390,249 @@
             }
 
             window.addEventListener('resize', handleResize);
+
+            // Camera animation functions
+            function animateCameraToGalaxy(galaxyIndex) {
+                if (isAnimating || galaxyIndex < 0 || galaxyIndex >= galaxies.length) return;
+
+                isAnimating = true;
+                focusedGalaxy = galaxyIndex;
+
+                // Get galaxy position
+                const galaxy = galaxies[galaxyIndex];
+                const targetPosition = galaxy.position.clone();
+
+                // Calculate camera target position (above the galaxy)
+                const cameraTargetPos = new THREE.Vector3(
+                    targetPosition.x,
+                    targetPosition.y + 4, // 4 units above the galaxy
+                    targetPosition.z
+                );
+
+                // Store initial camera and controls state
+                const initialCameraPos = camera.position.clone();
+                const initialControlsTarget = controls.target.clone();
+
+                // Animation parameters
+                let progress = 0;
+                const duration = 1500; // 1.5 seconds
+                const startTime = performance.now();
+
+                function animateCamera() {
+                    const elapsed = performance.now() - startTime;
+                    progress = Math.min(elapsed / duration, 1);
+
+                    // Smooth easing (ease-in-out)
+                    const easedProgress = progress < 0.5
+                        ? 2 * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+                    // Interpolate camera position
+                    camera.position.lerpVectors(initialCameraPos, cameraTargetPos, easedProgress);
+
+                    // Interpolate controls target
+                    controls.target.lerpVectors(initialControlsTarget, targetPosition, easedProgress);
+
+                    if (progress < 1) {
+                        // Continue animation
+                        controls.update();
+                        requestAnimationFrame(animateCamera);
+                    } else {
+                        // Ensure final positions are exact
+                        camera.position.copy(cameraTargetPos);
+                        controls.target.copy(targetPosition);
+                        controls.update();
+                        isAnimating = false;
+                    }
+                }
+
+                animateCamera();
+            }
+
+            function resetCameraView() {
+                if (isAnimating) return;
+
+                isAnimating = true;
+                focusedGalaxy = -1;
+
+                // Target positions for overview
+                const overviewCameraPos = new THREE.Vector3(0, 12, 0);
+                const overviewTarget = new THREE.Vector3(0, 0, 0);
+
+                // Store current state
+                const initialCameraPos = camera.position.clone();
+                const initialControlsTarget = controls.target.clone();
+
+                // Animation parameters
+                let progress = 0;
+                const duration = 1000; // 1 second
+                const startTime = performance.now();
+
+                function animateCamera() {
+                    const elapsed = performance.now() - startTime;
+                    progress = Math.min(elapsed / duration, 1);
+
+                    // Smooth easing
+                    const easedProgress = progress < 0.5
+                        ? 2 * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+                    // Interpolate positions
+                    camera.position.lerpVectors(initialCameraPos, overviewCameraPos, easedProgress);
+                    controls.target.lerpVectors(initialControlsTarget, overviewTarget, easedProgress);
+
+                    if (progress < 1) {
+                        // Continue animation
+                        controls.update();
+                        requestAnimationFrame(animateCamera);
+                    } else {
+                        // Ensure final positions are exact
+                        camera.position.copy(overviewCameraPos);
+                        controls.target.copy(overviewTarget);
+                        controls.update();
+                        isAnimating = false;
+                    }
+                }
+
+                animateCamera();
+            }
+
+            // Mouse interaction functions
+            function highlightGalaxy(index) {
+                // Don't highlight if this galaxy is currently focused or if animating
+                if (index === focusedGalaxy || isAnimating) return;
+
+                if (index >= 0 && index < shaderMaterials.length) {
+                    const material = shaderMaterials[index];
+                    // Change to cyan blue highlight
+                    material.uniforms.u_colorMode.value = 2; // Single color mode
+                    material.uniforms.u_color.value = new THREE.Color(0x00ffff); // Cyan
+                    material.uniforms.u_colorIntensity.value = 1.5; // Brighter
+                }
+            }
+
+            function restoreGalaxy(index) {
+                if (index >= 0 && index < shaderMaterials.length) {
+                    const material = shaderMaterials[index];
+                    const originalConfig = originalConfigs[index];
+
+                    // Restore original color configuration
+                    material.uniforms.u_colorMode.value = originalConfig.colorMode;
+                    material.uniforms.u_colorIntensity.value = originalConfig.colorIntensity;
+
+                    if (originalConfig.color) {
+                        material.uniforms.u_color.value = originalConfig.color;
+                    }
+
+                    if (originalConfig.colorPalette) {
+                        const paddedPalette = new Array(8);
+                        for (let i = 0; i < 8; i++) {
+                            if (i < originalConfig.colorPalette.length) {
+                                paddedPalette[i] = new THREE.Vector3(
+                                    originalConfig.colorPalette[i].r,
+                                    originalConfig.colorPalette[i].g,
+                                    originalConfig.colorPalette[i].b
+                                );
+                            } else {
+                                paddedPalette[i] = new THREE.Vector3(1.0, 1.0, 1.0);
+                            }
+                        }
+                        material.uniforms.u_colorPalette.value = paddedPalette;
+                        material.uniforms.u_paletteSize.value = originalConfig.colorPalette.length;
+                    }
+                }
+            }
+
+            function onMouseMove(event) {
+                // Skip during animation
+                if (isAnimating) return;
+
+                // Calculate mouse position in normalized device coordinates (-1 to +1)
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+                // Update raycaster
+                raycaster.setFromCamera(mouse, camera);
+
+                // Check for intersections with galaxy bounding boxes
+                const intersects = raycaster.intersectObjects(galaxyBounds);
+
+                if (intersects.length > 0) {
+                    const newHoveredIndex = intersects[0].object.userData.galaxyIndex;
+
+                    // Don't hover if this galaxy is currently focused
+                    if (newHoveredIndex === focusedGalaxy) {
+                        if (hoveredGalaxy !== -1) {
+                            restoreGalaxy(hoveredGalaxy);
+                            hoveredGalaxy = -1;
+                        }
+                        canvas.style.cursor = 'pointer';
+                        return;
+                    }
+
+                    if (newHoveredIndex !== hoveredGalaxy) {
+                        // Restore previous galaxy if any
+                        if (hoveredGalaxy !== -1) {
+                            restoreGalaxy(hoveredGalaxy);
+                        }
+
+                        // Highlight new galaxy
+                        hoveredGalaxy = newHoveredIndex;
+                        highlightGalaxy(hoveredGalaxy);
+
+                        // Change cursor to pointer
+                        canvas.style.cursor = 'pointer';
+                    }
+                } else {
+                    // No galaxy hovered
+                    if (hoveredGalaxy !== -1) {
+                        restoreGalaxy(hoveredGalaxy);
+                        hoveredGalaxy = -1;
+                        canvas.style.cursor = 'default';
+                    }
+                }
+            }
+
+            function onDoubleClick(event) {
+                // Skip during animation
+                if (isAnimating) return;
+
+                // Calculate mouse position
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+                // Update raycaster
+                raycaster.setFromCamera(mouse, camera);
+
+                // Check for intersections
+                const intersects = raycaster.intersectObjects(galaxyBounds);
+
+                if (intersects.length > 0) {
+                    const clickedIndex = intersects[0].object.userData.galaxyIndex;
+
+                    if (clickedIndex === focusedGalaxy) {
+                        // Double-click on focused galaxy - reset to overview
+                        resetCameraView();
+                    } else {
+                        // Focus on this galaxy
+                        // Restore previously hovered galaxy first
+                        if (hoveredGalaxy !== -1) {
+                            restoreGalaxy(hoveredGalaxy);
+                            hoveredGalaxy = -1;
+                        }
+                        animateCameraToGalaxy(clickedIndex);
+                    }
+                } else {
+                    // Double-click on empty space - reset to overview
+                    if (focusedGalaxy !== -1) {
+                        resetCameraView();
+                    }
+                }
+            }
+
+            // Add mouse event listeners
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('dblclick', onDoubleClick);
 
             // Animation loop
             function animate() {
