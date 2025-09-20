@@ -4,46 +4,95 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>3GSC - Three.js Points with ShaderMaterial</title>
+    <title>Galaxy Shader Examples - 3x3 Grid</title>
     <style>
         html,
         body {
-            height: 100%;
+            height: 100vh;
             margin: 0;
-            background: #333;
+            background: #0b0b0f;
             color: #eaeaf0;
             font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            overflow: hidden;
         }
 
         #app {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            height: 100vh;
+            width: 100vw;
+            gap: 2px;
+            box-sizing: border-box;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #111;
+            min-height: 0;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .canvas-container canvas {
+            width: 100%;
             height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #canvas {
-            width: 1200px;
-            height: 1200px;
             display: block;
+            object-fit: cover;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
             border-radius: 4px;
-        }
-
-
-        a {
-            color: #9ab4ff;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
+            font-size: 12px;
+            z-index: 10;
         }
     </style>
 </head>
 
 <body>
     <div id="app">
-        <canvas width="1200" height="1200" id="canvas"></canvas>
+        <div class="canvas-container">
+            <div class="canvas-label">Classic 3-Arm</div>
+            <canvas id="canvas1"></canvas>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-label">Dense 5-Arm</div>
+            <canvas id="canvas2"></canvas>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-label">Tight Spiral</div>
+            <canvas id="canvas3"></canvas>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-label">Large Black Hole</div>
+            <canvas id="canvas4"></canvas>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-label">Small Stars</div>
+            <canvas id="canvas5"></canvas>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-label">Fast Rotation</div>
+            <canvas id="canvas6"></canvas>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-label">Sparse Galaxy</div>
+            <canvas id="canvas7"></canvas>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-label">Blue Giant</div>
+            <canvas id="canvas8"></canvas>
+        </div>
+        <div class="canvas-container">
+            <div class="canvas-label">Red Dwarf</div>
+            <canvas id="canvas9"></canvas>
+        </div>
     </div>
 
     <script type="importmap">
@@ -67,16 +116,93 @@
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         import { GalaxyShader } from 'galaxy-shader';
         import { GalaxyGeometry } from 'galaxy-geometry';
-        const CANVAS_WIDTH = 1200;
-        const CANVAS_HEIGHT = 1200;
-        function a() {
-            const canvas = document.getElementById('canvas');
 
-            const NUM_POINTS = 30000;
-            const BLACK_HOLE_RADIUS = 0.1;
+        const galaxyConfigs = [
+            { // Classic 3-Arm
+                spiralCount: 3,
+                turnsPerSpiral: 1.0,
+                totalStars: 20000,
+                pointSize: 2.0,
+                blackHoleRadius: 0.1,
+                color: new THREE.Color(0.92, 0.94, 1.0)
+            },
+            { // Dense 5-Arm
+                spiralCount: 5,
+                turnsPerSpiral: 1.2,
+                totalStars: 35000,
+                pointSize: 1.5,
+                blackHoleRadius: 0.08,
+                color: new THREE.Color(0.9, 0.9, 1.0)
+            },
+            { // Tight Spiral
+                spiralCount: 2,
+                turnsPerSpiral: 2.5,
+                totalStars: 15000,
+                pointSize: 2.5,
+                blackHoleRadius: 0.15,
+                color: new THREE.Color(1.0, 0.95, 0.8)
+            },
+            { // Large Black Hole
+                spiralCount: 4,
+                turnsPerSpiral: 0.8,
+                totalStars: 25000,
+                pointSize: 2.0,
+                blackHoleRadius: 0.3,
+                color: new THREE.Color(0.8, 0.9, 1.0)
+            },
+            { // Small Stars
+                spiralCount: 3,
+                turnsPerSpiral: 1.0,
+                totalStars: 40000,
+                pointSize: 1.0,
+                blackHoleRadius: 0.12,
+                color: new THREE.Color(1.0, 1.0, 0.9)
+            },
+            { // Fast Rotation (will be animated faster)
+                spiralCount: 3,
+                turnsPerSpiral: 1.5,
+                totalStars: 22000,
+                pointSize: 2.2,
+                blackHoleRadius: 0.1,
+                color: new THREE.Color(0.95, 0.85, 1.0),
+                timeScale: 3.0
+            },
+            { // Sparse Galaxy
+                spiralCount: 2,
+                turnsPerSpiral: 0.6,
+                totalStars: 8000,
+                pointSize: 3.0,
+                blackHoleRadius: 0.2,
+                color: new THREE.Color(1.0, 0.9, 0.7)
+            },
+            { // Blue Giant
+                spiralCount: 6,
+                turnsPerSpiral: 1.0,
+                totalStars: 30000,
+                pointSize: 1.8,
+                blackHoleRadius: 0.05,
+                color: new THREE.Color(0.7, 0.8, 1.0)
+            },
+            { // Red Dwarf
+                spiralCount: 4,
+                turnsPerSpiral: 0.8,
+                totalStars: 12000,
+                pointSize: 2.8,
+                blackHoleRadius: 0.25,
+                color: new THREE.Color(1.0, 0.7, 0.6)
+            }
+        ];
+
+        function createGalaxy(canvasId, config, index) {
+            const canvas = document.getElementById(canvasId);
+            const container = canvas.parentElement;
+            const rect = container.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+
             // Three.js setup
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1000);
+            const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({
                 canvas: canvas,
                 antialias: false,
@@ -84,7 +210,7 @@
                 powerPreference: 'high-performance',
             });
 
-            renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+            renderer.setSize(width, height, false);
             renderer.setPixelRatio(Math.max(1, Math.min(2, window.devicePixelRatio || 1)));
             renderer.setClearColor(0x0b0b0f, 1.0);
 
@@ -94,40 +220,41 @@
             composer.addPass(renderPass);
 
             const bloomPass = new UnrealBloomPass(
-                new THREE.Vector2(CANVAS_WIDTH, CANVAS_HEIGHT),
-                2.5,    // strength
-                1,    // radius
-                0.9    // threshold
+                new THREE.Vector2(width, height),
+                1.5,    // strength (reduced for grid)
+                0.8,    // radius
+                0.9     // threshold
             );
             composer.addPass(bloomPass);
 
-
             // Add OrbitControls
             const controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true; // Smooth camera movements
+            controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.screenSpacePanning = false;
             controls.minDistance = 0.5;
             controls.maxDistance = 10;
-            camera.position.set(0, -1, .4);
+            camera.position.set(0, -1, 0.4);
 
-
-
-            const geometry = new GalaxyGeometry(NUM_POINTS);
+            // Create galaxy
+            const geometry = new GalaxyGeometry(config.totalStars);
             const shaderMaterial = new GalaxyShader({
-                resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-                color: new THREE.Color(0.92, 0.94, 1.0),
-                pointSize: 2.0,
-                totalStars: NUM_POINTS,
-                time: 0, // Add time uniform for potential animations
-                blackHoleRadius: BLACK_HOLE_RADIUS, // Radius of the black hole
-                blackHolePosition: new THREE.Vector3(0, 0.0, 0.0) // Position of the black hole
+                resolution: new THREE.Vector2(width, height),
+                color: config.color,
+                pointSize: config.pointSize,
+                totalStars: config.totalStars,
+                time: 0,
+                blackHoleRadius: config.blackHoleRadius,
+                blackHolePosition: new THREE.Vector3(0, 0.0, 0.0),
+                spiralCount: config.spiralCount,
+                turnsPerSpiral: config.turnsPerSpiral
             });
 
-            // Create Points object and add to scene
             const points = new THREE.Points(geometry, shaderMaterial);
             scene.add(points);
-            const blackHoleGeometry = new THREE.SphereGeometry(BLACK_HOLE_RADIUS, 32, 32);
+
+            // Add black hole visualization
+            const blackHoleGeometry = new THREE.SphereGeometry(config.blackHoleRadius, 16, 16);
             const blackHoleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
             const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
             scene.add(blackHole);
@@ -135,17 +262,25 @@
             // Animation loop
             function animate() {
                 requestAnimationFrame(animate);
-                const time = performance.now() / 10000 / 5; // Get time in seconds
-                shaderMaterial.uniforms.u_time.value = time; // Update time uniform
+                const timeScale = config.timeScale || 1.0;
+                const time = (performance.now() / 10000 / 5) * timeScale;
+                shaderMaterial.uniforms.u_time.value = time;
                 controls.update();
                 composer.render();
             }
 
             animate();
         }
+
+        function initGalaxies() {
+            for (let i = 1; i <= 9; i++) {
+                createGalaxy(`canvas${i}`, galaxyConfigs[i - 1], i);
+            }
+        }
+
         setTimeout(() => {
-            a();
-        }, 3000); // Show error after 5 seconds if Three.js is not loaded
+            initGalaxies();
+        }, 1000);
     </script>
 </body>
 
