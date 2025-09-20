@@ -304,6 +304,10 @@
                 });
 
                 const points = new THREE.Points(geometry, shaderMaterial);
+
+                // Disable frustum culling to prevent galaxies from disappearing when center goes out of view
+                points.frustumCulled = false;
+
                 galaxyGroup.add(points);
 
                 // Add black hole visualization
