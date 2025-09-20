@@ -11,6 +11,7 @@
   },
   "scripts": {
     "build": "tsc --build && tsc --build -f tsconfig.commonjs.json",
+    "build:watch": "tsc --build --watch && tsc --build -f tsconfig.commonjs.json --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
