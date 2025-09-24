@@ -402,12 +402,14 @@
                 const galaxy = galaxies[galaxyIndex];
                 const targetPosition = galaxy.position.clone();
 
-                // Calculate camera target position (above the galaxy)
-                const cameraTargetPos = new THREE.Vector3(
-                    targetPosition.x,
-                    targetPosition.y + 2, // 4 units above the galaxy
-                    targetPosition.z
-                );
+                // Calculate camera target position (maintaining current viewing angle)
+                const currentOffset = camera.position.clone().sub(controls.target);
+                const distance = currentOffset.length();
+                const targetDistance = Math.min(distance, 3); // Limit how close we get
+
+                // Normalize and scale the offset to maintain viewing angle
+                currentOffset.normalize().multiplyScalar(targetDistance);
+                const cameraTargetPos = targetPosition.clone().add(currentOffset);
 
                 // Store initial camera and controls state
                 const initialCameraPos = camera.position.clone();
@@ -455,9 +457,14 @@
                 isAnimating = true;
                 focusedGalaxy = -1;
 
-                // Target positions for overview
-                const overviewCameraPos = new THREE.Vector3(0, 12, 0);
+                // Target positions for overview (maintaining current viewing angle)
+                const currentOffset = camera.position.clone().sub(controls.target);
                 const overviewTarget = new THREE.Vector3(0, 0, 0);
+
+                // Scale the offset to provide a good overview distance while maintaining angle
+                const overviewDistance = 12; // Distance from center
+                currentOffset.normalize().multiplyScalar(overviewDistance);
+                const overviewCameraPos = overviewTarget.clone().add(currentOffset);
 
                 // Store current state
                 const initialCameraPos = camera.position.clone();
