@@ -1,6 +1,6 @@
 {
   "name": "threejs-galaxy-shader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A performant Three.js galaxy shader with customizable colors, spiral patterns, and black hole effects",
   "main": "dist/common/index.js",
   "module": "dist/esm/index.js",
