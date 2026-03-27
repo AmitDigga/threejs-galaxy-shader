@@ -2,6 +2,8 @@
 
 A Three.js custom shader for rendering spiral galaxy point clouds with black hole effects.
 
+**[Live Demo](https://amitdigga.github.io/threejs-galaxy-shader/)**
+
 ## Features
 
 - Spiral galaxy geometry
@@ -166,7 +168,7 @@ export default ThreeScene;
 
 ### CommonJs
 
-Example is under `exmaples/index.html`.
+Example is under `examples/index.html`. You can also view the [live demo](https://amitdigga.github.io/threejs-galaxy-shader/).
 
 Please modify the import paths based on your setup.
 
